@@ -1,5 +1,4 @@
 node_modules
-jspm_packages
 platforms
 plugins
-
+bower_components

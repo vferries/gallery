@@ -2,7 +2,7 @@ var gulp = require('gulp');
 var runSequence = require('run-sequence');
 var del = require('del');
 var vinylPaths = require('vinyl-paths');
-//var to5 = require('gulp-6to5');
+//var babel = require('gulp-babel');
 var jshint = require('gulp-jshint');
 var stylish = require('jshint-stylish');
 var yuidoc = require("gulp-yuidoc");
@@ -60,11 +60,17 @@ gulp.task('clean', function() {
     .pipe(vinylPaths(del));
 });
 
+gulp.task('build-css', function () {
+  return gulp.src(path.style)
+    .pipe(changed(path.output, {extension: '.css'}))
+    .pipe(gulp.dest(path.output));
+});
+
 gulp.task('build-system', function () {
   return gulp.src(path.source)
     .pipe(plumber())
     .pipe(changed(path.output, {extension: '.js'}))
-    //.pipe(to5(assign({}, compilerOptions, {modules:'system'})))
+//    .pipe(babel(assign({}, compilerOptions, {modules:'amd'})))
     .pipe(gulp.dest(path.output));
 });
 
@@ -111,7 +117,7 @@ gulp.task('changelog', function(callback) {
 gulp.task('build', function(callback) {
   return runSequence(
     'clean',
-    ['build-system', 'build-html'],
+    ['build-css', 'build-system', 'build-html'],
     callback
   );
 });
@@ -121,7 +127,7 @@ gulp.task('webdriver_update', webdriver_update);
 gulp.task('build-e2e', function () {
   return gulp.src(path.e2eSpecsSrc)
     .pipe(plumber())
-    //.pipe(to5())
+//    .pipe(babel())
     .pipe(gulp.dest(path.e2eSpecsDist));
 });
 
@@ -147,7 +153,7 @@ gulp.task('serve', ['build'], function(done) {
     open: false,
     port: 9000,
     server: {
-      baseDir: ['src'],
+      baseDir: ['www/'],
       middleware: function (req, res, next) {
         res.setHeader('Access-Control-Allow-Origin', '*');
         next();
@@ -163,7 +169,7 @@ function reportChange(event){
 gulp.task('watch', ['serve'], function() {
   gulp.watch(path.source, ['build-system', browserSync.reload]).on('change', reportChange);
   gulp.watch(path.html, ['build-html', browserSync.reload]).on('change', reportChange);
-  gulp.watch(path.style, browserSync.reload).on('change', reportChange);
+  gulp.watch(path.style, ['build-css', browserSync.reload]).on('change', reportChange);
 });
 
 gulp.task('prepare-release', function(callback){
